@@ -3,7 +3,6 @@ import { IUserSocket } from "./user";
 import uuid = require("uuid");
 import * as socketio from "socket.io";
 
-
 export class Deck {
     _cards: IUUIDCard[] = [];
 
@@ -151,7 +150,6 @@ export class Game {
             this.boardState.push(placementInfo)
             return placementInfo;
         }
-        null;
     }
 
     moveCardToBreakZone(player: IPlayerData, cardUUID: number){
@@ -163,6 +161,7 @@ export class Game {
     }
 
     updateCardPositionOnBoard(player: IPlayerData, cardUUID: number, x: number, y: number, rotation = 0) {
+        //TODO change to card container
         const cardIndex = this.boardState.findIndex(cardState => cardState.card.uuid === cardUUID);
         if(cardIndex > -1){
             const card = this.boardState.splice(cardIndex, 1)[0].card;
@@ -186,14 +185,15 @@ export interface IGameEvent{
 export const GAME_EVENT = "game"
 
 export class GamesHandler{
-
     games: Game[] = [];
     usersMap: Record<string, Game> = {};
 
-    _server: socketio.Server;
+    private _server: socketio.Server;
+    private _actions: GameBindingsHandler;
 
-    constructor(server: socketio.Server){
+    constructor(server: socketio.Server, actions: GameBindingsHandler){
         this._server = server;
+        this._actions = actions;
     }
 
     addSocket(userSocket: IUserSocket){
@@ -240,27 +240,24 @@ export class GamesHandler{
         user distint message is optionally used to send "private" state to the user performing the action
         group message is optionally used to send publicly visible state to all users within the match
         */
-        let logMessage = "";
-        let userDistinctMessageData = null;
-        let groupMessageData = null;
-        switch (event.type) {
-            case "DrawFromDeck":
+        const f = this._actions.resolveBinding(event.type);
 
-                break;
-        
-            
-            default:
-                break;
+        if(f){
+            const {userDistinctMessageData, groupMessageData, logMessage } = f(game, event.data, player.username) ;
+
+            if(userDistinctMessageData){
+                userSocket.socket.emit(GAME_EVENT, userDistinctMessageData);
+            }
+            if(groupMessageData){
+                this._server.to(game.id).emit(GAME_EVENT, groupMessageData);
+            }
+    
+            this._server.to(game.id).emit(GAME_EVENT, {type: "log", message: logMessage})
+
+        }else{
+            console.log("couldnt find binding") //TODO properly log this
         }
 
-        if(userDistinctMessageData){
-            userSocket.socket.emit(GAME_EVENT, userDistinctMessageData);
-        }
-        if(groupMessageData){
-            this._server.to(game.id).emit(GAME_EVENT, groupMessageData);
-        }
-
-        this._server.to(game.id).emit(GAME_EVENT, {type: "log", message: logMessage})
     }
 }
 

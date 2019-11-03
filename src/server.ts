@@ -6,6 +6,13 @@ import { MessagingHandler } from "./systems/messaging";
 import { IUserSocket, UserSocket } from "./models/user";
 import { GamesHandler } from "./models/game";
 
+import { GameBindingsHandler, drawCardFromDeck, moveCard, moveCardToBreakZone } from "./models/gameBindings";
+
+const bindingResolver = new GameBindingsHandler();
+bindingResolver.addGameBinding("drawCard", drawCardFromDeck)
+bindingResolver.addGameBinding("moveCard", moveCard)
+bindingResolver.addGameBinding("moveCardToBreakZone", moveCardToBreakZone)
+
 export class Server {
   gameHandler: GamesHandler;
   cardHandler: CardHandler;
@@ -31,7 +38,7 @@ export class Server {
         let io = socketio(http);
   
         this.messaging = new MessagingHandler(io);
-        this.gameHandler = new GamesHandler(io);
+        this.gameHandler = new GamesHandler(io, bindingResolver);
 
         //TODO move this?
         io.on('connection', (socket: socketio.Socket) => {
@@ -44,6 +51,7 @@ export class Server {
 
           this.users.push(user);
           console.log(this.users.length)
+          //TODO remove. this is temp.
           if(this.users.length % 2 === 0){
             this.gameHandler.newGame(this.users[this.users.length - 1], this.users[this.users.length - 2]);
           }          
