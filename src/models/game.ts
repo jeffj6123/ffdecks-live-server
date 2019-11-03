@@ -245,12 +245,7 @@ export class GamesHandler{
         let groupMessageData = null;
         switch (event.type) {
             case "DrawFromDeck":
-                console.log("draw from deck")
-                const cardDrawData = game.drawCard(player);
 
-                userDistinctMessageData = cardDrawData;
-                groupMessageData = {username: userSocket.username, handLength: cardDrawData.handSize, deckLength: cardDrawData.deckLength};
-                logMessage = `${userSocket.username} Drew 1 card`;
                 break;
         
             

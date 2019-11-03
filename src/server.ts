@@ -56,9 +56,12 @@ export class Server {
 
 }
 
-let s = new Server();
-s.initialize().then(expressServer => {
+let f = async () => {
+  let s = new Server();
+  let expressServer = await s.initialize()
   expressServer.listen(3000, function(){
     console.log('listening on *:3000');
   });
-})
+}
+
+f();
