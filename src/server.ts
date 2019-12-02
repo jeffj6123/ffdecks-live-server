@@ -1,7 +1,7 @@
 import * as express from "express";
 import * as socketio from "socket.io";
-import { CardHandler } from "./models/cardHandler";
 import * as Http from "http";
+import { CardHandler } from "./models/cardHandler";
 import { MessagingHandler } from "./systems/messaging";
 import { IUserSocket, UserSocket } from "./models/user";
 import { GamesHandler } from "./models/game";
@@ -18,11 +18,11 @@ export class Server {
     this.cardHandler = new CardHandler();
   }
 
-  initialize(): Promise<Http.Server>{
-    return new Promise((resolve, reject) => {
-      Promise.all([
+  async initialize(): Promise<Http.Server>{
+      //initilize all dependencies
+      await Promise.all([
         // this.cardHandler.initialize()
-      ]).then(vals => {
+      ])
         const app = express();
         app.set("port", process.env.PORT || 3000);
   
@@ -49,11 +49,8 @@ export class Server {
           }          
         });
   
-        resolve(http);
-      })
-    })
-  }
-
+        return http;
+    }
 }
 
 let f = async () => {
