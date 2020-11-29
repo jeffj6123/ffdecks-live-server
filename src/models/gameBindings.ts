@@ -1,4 +1,4 @@
-import { Game } from "./game";
+import { IBoardState } from "./board/boardState";
 
 export interface IEventData {
     logMessage: string;
@@ -14,60 +14,47 @@ function getEventData(): IEventData {
     }
 }
 
-export function drawCardFromDeck(game: Game, data: any, username: string): IEventData {
+export interface IMoveCardEventData {
+    previousContainer: string;      
+    nextContainer: string;
+    previousIndex: number,
+    currentIndex: number
+}
+
+export function moveCard(game: IBoardState, data: IMoveCardEventData, username: string): IEventData {
     let r = getEventData();
 
-    console.log("draw from deck")
-    const player = game.getPlayer(username);
-    const cardDrawData = game.drawCard(player);
+    const cardId = game.containers[data.previousContainer][data.previousIndex];
+    const card = game.cards[cardId];
 
-    r.userDistinctMessageData = cardDrawData;
-    r.groupMessageData = {username: username, handLength: cardDrawData.handSize, deckLength: cardDrawData.deckLength};
-    r.logMessage = `${username} Drew 1 card`;
+    if(card.owner === username) {
+        console.log(game.containers[data.previousContainer].length, game.containers[data.nextContainer].length)
+
+        game.containers[data.previousContainer].splice(data.previousIndex, 1);
+        game.containers[data.nextContainer].splice(data.currentIndex, 0, cardId);
+        console.log(game.containers[data.previousContainer].length, game.containers[data.nextContainer].length)
+    }
+
+    r.groupMessageData = {op:"moveCard", data};
 
     return r;
 }
 
-export function playCardFromHand(game: Game, data: any, username: string): IEventData {
-    let r = getEventData();
-
-    console.log("play from hand")
-    const player = game.getPlayer(username);
-    const cardData = game.playCardFromHand(player, data.cardUUID, data.x, data.y);
-    const handLength = player.hand.length;
-
-    // r.userDistinctMessageData = cardData;
-    r.groupMessageData = {username: username, card: cardData, handLength: handLength};
-    r.logMessage = `${username} Played a card`; //TODO put name here
-
-    return r;
+export interface IRotateCardEventData {
+    cardId: string;      
+    rotation: number;
 }
 
-export function moveCard(game: Game, data: any, username: string): IEventData {
+export function rotateCard(game: IBoardState, data: IRotateCardEventData, username: string): IEventData {
     let r = getEventData();
 
-    console.log("draw from deck")
-    const player = game.getPlayer(username);
-    const cardData = game.playCardFromHand(player, data.cardUUID, data.x, data.y);
-    const handLength = player.hand.length;
+    const card = game.cards[data.cardId];
 
-    // r.userDistinctMessageData = cardData;
-    r.groupMessageData = {username: username, card: cardData, handLength: handLength};
-    r.logMessage = `${username} moved a card`;
+    if(card.owner === username) {
+        card.metaData.rotation = data.rotation;
+    }
 
-    return r;
-}
-
-export function moveCardToBreakZone(game: Game, data: any, username: string): IEventData {
-    let r = getEventData();
-
-    console.log("move card to break zone")
-    const player = game.getPlayer(username);
-    const cardData = game.moveCardToBreakZone(player, data.cardUUID);
-
-    // r.userDistinctMessageData = cardData;
-    r.groupMessageData = {username: username, board: [], breakZone: []};
-    r.logMessage = `${username} moved a card`;
+    r.groupMessageData = {op:"rotateCard", data};
 
     return r;
 }

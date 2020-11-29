@@ -11,7 +11,7 @@ export class CardHandler{
 
     constructor(){}
 
-    initialize(): Promise<any> {
+    initialize(): Promise<void> {
         return new Promise( (resolve, reject) => {
             axios.get<ICardsInfo>('http://ffdecks.com/api/cards/basic').then(res => {
                 this.cards = res.data.cards;

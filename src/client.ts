@@ -12,7 +12,7 @@ for(let i = 0; i < users; i++){
         console.log(message);
     });
 
-    socket.on(GAME_EVENT, (message) => {
+    socket.on(GAME_EVENT, (message: any) => {
         console.log(message);
     })
 
@@ -23,6 +23,6 @@ for(let i = 0; i < users; i++){
     }
 
     socket.emit(MESSAGE_EVENT, message);
-    socket.emit(GAME_EVENT, {type:"DrawFromDeck"})
+    // socket.emit(GAME_EVENT, {type:"DrawFromDeck"})
 
 }

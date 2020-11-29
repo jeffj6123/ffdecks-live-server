@@ -11,33 +11,33 @@ export interface IMessage {
     room: string;
 }
 
-export class MessagingHandler{
+// export class MessagingHandler{
     
-    _server: socketio.Server;
+//     _server: socketio.Server;
 
-    constructor(server: socketio.Server){
-        this._server = server;
-        console.log("initialized messaging")
-    }
+//     constructor(server: socketio.Server){
+//         this._server = server;
+//         console.log("initialized messaging")
+//     }
 
-    sendMessage(message: IMessage): void {
-        console.log("sending message");
-        // console.log(this._server)
-        this._server.to(message.room).emit(MESSAGE_EVENT, message);
-    }
+//     sendMessage(message: IMessage): void {
+//         console.log("sending message");
+//         // console.log(this._server)
+//         this._server.to(message.room).emit(MESSAGE_EVENT, message);
+//     }
 
-    addSocket(userSocket: IUserSocket): void {
-        this.addRoom(DEFAULT_LOBBY, userSocket.socket);
-        userSocket.socket.on(MESSAGE_EVENT, this.sendMessage.bind(this) );
-    }
+//     addSocket(userSocket: IUserSocket): void {
+//         this.addRoom(DEFAULT_LOBBY, userSocket.socket);
+//         userSocket.socket.on(MESSAGE_EVENT, this.sendMessage.bind(this) );
+//     }
 
-    addRoom(room: string, socket: socketio.Socket): void {
-        socket.join(room);
-    }
+//     addRoom(room: string, socket: socketio.Socket): void {
+//         socket.join(room);
+//     }
 
-    leaveRoom(room: string, socket: socketio.Socket): void {
-        socket.leave(room);
-    }
+//     leaveRoom(room: string, socket: socketio.Socket): void {
+//         socket.leave(room);
+//     }
 
-}
+// }
 

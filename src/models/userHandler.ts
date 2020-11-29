@@ -12,7 +12,6 @@ export class UserHandler{
             socket.on('setname', (message: string ) => {
                 const user = this.users.find(user => user.username === message);
                 if(user){
-                  user.switchSocket(socket);
                   reject(true);
                 }else{
                   let u = new User(socket, message);

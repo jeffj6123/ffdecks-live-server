@@ -2,7 +2,10 @@ import { IUUIDCard } from "../interfaces/ICard";
 import { IUserSocket } from "./user";
 import uuid = require("uuid");
 import * as socketio from "socket.io";
-
+import { addGridContainers, addPlayerContainers, getState, IBoardState } from './board/boardState';
+import { GameBindingsHandler } from "./gameBindings";
+import { insertDeckAndSetHand } from "./board/boardUtils";
+import { data } from "./dummyData";
 export class Deck {
     _cards: IUUIDCard[] = [];
 
@@ -77,116 +80,96 @@ export interface ILoggingService{
     logAction: (data: any) => Promise<any>;
 }
 
-export interface ICardBoardState{
-    x: number;
-    y: number;
-    rotation: number;
-    card: IUUIDCard;
-    player: string;
-}
 
-export interface IPlayerData {
-    username: string;
-    deck: Deck;
-    breakZone: CardContainer;
-    hand: CardContainer;
-}
+// export class Game {
+//     id: string;
+//     players: IPlayerData[];
 
-export interface IDrawCard {
-    deckLength: number;
-    card: IUUIDCard;
-    handSize: number;
-}
+//     boardState: ICardBoardState[];
 
-export class Game {
-    id: string;
-    players: IPlayerData[];
+//     _onGameFinished: Promise<any>;
 
-    boardState: ICardBoardState[];
+//     constructor(id: string, players: {deck: Deck, username: string}[]){
+//         this.id = id;
+//         this.players = players.map(data => { return {
+//             username: data.username,
+//             deck: data.deck,
+//             breakZone: new CardContainer([]),
+//             hand: new CardContainer([])}
+//             })
 
-    _onGameFinished: Promise<any>;
+//         this._onGameFinished = new Promise( (resolve, reject) => {
 
-    constructor(id: string, players: {deck: Deck, username: string}[]){
-        this.id = id;
-        this.players = players.map(data => { return {
-            username: data.username,
-            deck: data.deck,
-            breakZone: new CardContainer([]),
-            hand: new CardContainer([])}
-            })
+//         })
 
-        this._onGameFinished = new Promise( (resolve, reject) => {
+//     }
 
-        })
+//     drawCard(player: IPlayerData): IDrawCard {
+//         const card = player.deck.drawCard();
+//         const deckLength = player.deck.length;
+//         this.addCardToHand(player, card);
+//         const handSize = player.hand.length;
+//         return {
+//             deckLength,
+//             card,
+//             handSize
+//         }
+//     }
 
-    }
+//     addCardToHand(player: IPlayerData, card: IUUIDCard) {
+//         player.hand.insert(card);
+//     }
 
-    drawCard(player: IPlayerData): IDrawCard {
-        const card = player.deck.drawCard();
-        const deckLength = player.deck.length;
-        this.addCardToHand(player, card);
-        const handSize = player.hand.length;
-        return {
-            deckLength,
-            card,
-            handSize
-        }
-    }
+//     playCardFromHand(player: IPlayerData, cardUUID: number, x: number, y: number): ICardBoardState {
+//         const card = player.hand.removeByUUID(cardUUID);
+//         if(card){
+//             const placementInfo = {
+//                 x,
+//                 y,
+//                 card,
+//                 rotation: 0,
+//                 player: player.username
+//             };
+//             this.boardState.push(placementInfo)
+//             return placementInfo;
+//         }
+//     }
 
-    addCardToHand(player: IPlayerData, card: IUUIDCard) {
-        player.hand.insert(card);
-    }
+//     moveCardToBreakZone(player: IPlayerData, cardUUID: number){
+//         const cardIndex = this.boardState.findIndex(cardState => cardState.card.uuid === cardUUID);
+//         if(cardIndex > -1){
+//             const card = this.boardState.splice(cardIndex, 1)[0].card;
+//             player.breakZone.insert(card);
+//         }
+//     }
 
-    playCardFromHand(player: IPlayerData, cardUUID: number, x: number, y: number): ICardBoardState {
-        const card = player.hand.removeByUUID(cardUUID);
-        if(card){
-            const placementInfo = {
-                x,
-                y,
-                card,
-                rotation: 0,
-                player: player.username
-            };
-            this.boardState.push(placementInfo)
-            return placementInfo;
-        }
-    }
+//     updateCardPositionOnBoard(player: IPlayerData, cardUUID: number, x: number, y: number, rotation = 0) {
+//         //TODO change to card container
+//         const cardIndex = this.boardState.findIndex(cardState => cardState.card.uuid === cardUUID);
+//         if(cardIndex > -1){
+//             const card = this.boardState.splice(cardIndex, 1)[0].card;
+//             player.breakZone.insert(card);
+//         }
+//     }
 
-    moveCardToBreakZone(player: IPlayerData, cardUUID: number){
-        const cardIndex = this.boardState.findIndex(cardState => cardState.card.uuid === cardUUID);
-        if(cardIndex > -1){
-            const card = this.boardState.splice(cardIndex, 1)[0].card;
-            player.breakZone.insert(card);
-        }
-    }
+//     getPlayer(username: string): IPlayerData{
+//         return this.players.find(user => username === user.username);
+//     }
 
-    updateCardPositionOnBoard(player: IPlayerData, cardUUID: number, x: number, y: number, rotation = 0) {
-        //TODO change to card container
-        const cardIndex = this.boardState.findIndex(cardState => cardState.card.uuid === cardUUID);
-        if(cardIndex > -1){
-            const card = this.boardState.splice(cardIndex, 1)[0].card;
-            player.breakZone.insert(card);
-        }
-    }
-
-    getPlayer(username: string): IPlayerData{
-        return this.players.find(user => username === user.username);
-    }
-
-    // onCompletion(): Promise<any> {}
-}
+//     // onCompletion(): Promise<any> {}
+// }
 
 export interface IGameEvent{
-    type: string;
+    op: string;
     username: string;
     data: any;
 }
 
-export const GAME_EVENT = "game"
+export const GAME_EVENT = "message"
 
 export class GamesHandler{
-    games: Game[] = [];
-    usersMap: Record<string, Game> = {};
+    games: IBoardState[] = [];
+    usersMap: Record<string, IBoardState> = {};
 
     private _server: socketio.Server;
     private _actions: GameBindingsHandler;
@@ -201,58 +184,73 @@ export class GamesHandler{
     }
 
     newGame(player: IUserSocket, player2: IUserSocket){
-        let cards = [{uuid: 0, id: 1}, {uuid: 1, id: 1}, {uuid: 2, id: 1}, {uuid: 3, id: 1}, {uuid: 4, id: 1}]
         const id = uuid();
-        const game = new Game(id, [
-            {
-                deck: new Deck(cards),
-                username: player.username
-            },
-            {
-                deck: new Deck(cards.map(card => card)),
-                username: player2.username
-            }
-        ]);
+        let gameState = getState(id);
         
-        console.log("new game");
-        
-        const data = {
-            id,
-
-        }
+        addPlayerContainers(player.username, gameState);
+        insertDeckAndSetHand(gameState, data.cards, player.username);
+        addGridContainers(player.username, gameState, 'forward', 8, 1);
+        addGridContainers(player.username, gameState, 'backup', 5, 1);
 
         player.socket.join(id);
-        player2.socket.join(id);
+        this.usersMap[player.username] = gameState;
 
-        this._server.to(game.id).emit(GAME_EVENT, data);
 
-        this.usersMap[player.username] = game;
-        this.usersMap[player2.username] = game;
+        const player2Username = player2.username || "test";
+        addPlayerContainers(player2Username, gameState);
+        insertDeckAndSetHand(gameState, data.cards.reverse(), player2Username);
+        addGridContainers(player2Username, gameState, 'forward', 8, 1);
+        addGridContainers(player2Username, gameState, 'backup', 5, 1);
 
-        this.games.push(game);
+
+        if(player2) {
+            player2.socket.join(id);
+            this.usersMap[player2.username] = gameState;
+
+            player2.socket.emit(GAME_EVENT, {
+                op: "initialBoardState",
+                data: {
+                    ...gameState,
+                    activePlayer: player2.username
+                }
+            });
+        }
+
+        
+
+        player.socket.emit(GAME_EVENT, {
+            op: "initialBoardState",
+            data: {
+                ...gameState,
+                activePlayer: player.username
+            }
+        });
+        this.games.push(gameState);
+        console.log("game created")
     }
 
     applyPlayerAction(userSocket: IUserSocket, event: IGameEvent){
+        console.log(event);
         const game = this.usersMap[userSocket.username];
-        const player = game.getPlayer(userSocket.username);
+        // const player = game.getPlayer(userSocket.username);
         /*
         log message is meant to be human readable to distinctly display what action the user took
         user distint message is optionally used to send "private" state to the user performing the action
         group message is optionally used to send publicly visible state to all users within the match
         */
-        const f = this._actions.resolveBinding(event.type);
+        const f = this._actions.resolveBinding(event.op);
 
         if(f){
-            const {userDistinctMessageData, groupMessageData, logMessage } = f(game, event.data, player.username) ;
+            const {userDistinctMessageData, groupMessageData, logMessage } = f(game, event.data, userSocket.username) ;
 
             if(userDistinctMessageData){
                 userSocket.socket.emit(GAME_EVENT, userDistinctMessageData);
             }
             if(groupMessageData){
-                this._server.to(game.id).emit(GAME_EVENT, groupMessageData);
+                this._server.to(game.gameId).emit(GAME_EVENT, groupMessageData);
             }
     
-            this._server.to(game.id).emit(GAME_EVENT, {type: "log", message: logMessage})
+            // this._server.to(game.gameId).emit(GAME_EVENT, {type: "log", message: logMessage})
 
         }else{
             console.log("couldnt find binding") //TODO properly log this
