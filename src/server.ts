@@ -2,12 +2,11 @@ import * as express from "express";
 import { Server as socketio, Socket } from "socket.io";
 import * as Http from "http";
 import { CardHandler } from "./models/cardHandler";
-// import { MessagingHandler } from "./systems/messaging";
 import { IUserSocket, UserSocket } from "./models/user";
 import { GamesHandler } from "./models/game";
 import * as cors from 'cors';
 
-import { GameBindingsHandler, drawCardFromDeck, moveCard, rotateCard } from "./models/gameBindings";
+import { GameBindingsHandler, moveCard, rotateCard } from "./models/gameBindings";
 
 const bindingResolver = new GameBindingsHandler();
 bindingResolver.addGameBinding("rotateCard", rotateCard)
