@@ -6,11 +6,12 @@ import { UserSocket } from "./models/user";
 import { GamesHandler } from "./models/game";
 import * as cors from 'cors';
 
-import { GameBindingsHandler, moveCard, rotateCard } from "./models/gameBindings";
+import { GameBindingsHandler, getState, moveCard, rotateCard } from "./models/gameBindings";
 import { Lobbyhandler, LobbyhandlerSystem } from "./models/lobbyHandler";
 import { UserHandler } from "./models/userHandler";
 
 const bindingResolver = new GameBindingsHandler();
+bindingResolver.addGameBinding("state", getState)
 bindingResolver.addGameBinding("rotateCard", rotateCard)
 bindingResolver.addGameBinding("moveCard", moveCard)
 
@@ -60,20 +61,22 @@ export class Server {
         
         this.userHandler = new UserHandler(io);
         this.gameHandler = new GamesHandler(io, bindingResolver, this.userHandler);
-        this.lobbyHandler = new LobbyhandlerSystem(io, this.userHandler);
+        this.lobbyHandler = new LobbyhandlerSystem(io, this.userHandler, this.gameHandler);
 
         //TODO move this?
-        io.on('connection', (socket: Socket) => {
+        io.on('connection', async (socket: Socket) => {
 
-          const user = new UserSocket(Math.random().toString(), socket);
+          // const username = Math.random().toString();
+          try {
+            const userSocket = await this.userHandler.addSocket(socket);
+            console.log(userSocket.username)
+            this.gameHandler.addSocket(userSocket);
+            this.lobbyHandler.addSocket(userSocket);
+            
+          }catch(e) {
 
-          this.gameHandler.addSocket(user);
-          this.lobbyHandler.addSocket(user);
-          
-          // TODO remove. this is temp.
-          // if(this.users.length % 2 === 0){
-          //   this.gameHandler.newGame(this.users[this.users.length - 1], this.users[this.users.length - 2]);
-          // }          
+          }
+         
         });
   
         return http;

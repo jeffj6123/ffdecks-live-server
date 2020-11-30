@@ -59,6 +59,14 @@ export function rotateCard(game: IBoardState, data: IRotateCardEventData, userna
     return r;
 }
 
+export function getState(game: IBoardState, data: any, username: string): IEventData {
+    let r = getEventData();
+
+    r.userDistinctMessageData = {op:"state", data: {...game, activePlayer: username}};
+    
+    return r;
+}
+
 export class GameBindingsHandler {
     private _actions: Record<string, Function> = {};
 

@@ -8,21 +8,25 @@ export class UserHandler{
     addSocket(socket: Socket): Promise<UserSocket> {
         return new Promise((resolve, reject) => {
             socket.on('setname', (message: string ) => {
-                if(this.users[message]){
-                  reject(true);
-                }else{
+                // if(this.users[message]){
+                //   reject(true);
+                // }else{
                   let u = new UserSocket(message, socket);
+                  socket.join(message);
                   this.users[message] = u;
+                // }
+                socket.emit("ready");
                 resolve(u);
-                }
 
                 //TODO figure out when they arent authorized
               })
+            socket.emit('setname');
         })
     }
 
     addSocketTemp(socket: Socket, username: string) {
       socket.join(username);
+      this.users[username] = new UserSocket(username, socket);
     }
 
     getUser(username: string) {
@@ -30,6 +34,7 @@ export class UserHandler{
     }
 
     emitToUser(username: string, eventName: string, data: any) {
-      this.server.to(username).emit(eventName, eventName,)
+      console.log(username, eventName, data)
+      this.server.to(username).emit(eventName, data)
     }
 }

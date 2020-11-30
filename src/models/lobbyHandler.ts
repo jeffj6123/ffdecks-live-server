@@ -1,6 +1,7 @@
 
 import { Server as socketio, Socket } from "socket.io";
 import { IBaseEvent } from "./event.interface";
+import { GamesHandler } from "./game";
 import { UserSocket } from "./user";
 import { UserHandler } from "./userHandler";
 
@@ -60,7 +61,9 @@ export class LobbyhandlerSystem{
 
     _server: socketio;
 
-    constructor(server: socketio, private userHandler: UserHandler){
+    constructor(server: socketio, 
+                private userHandler: UserHandler,
+                private gameHandler: GamesHandler){
         this._server = server;
         console.log("initialized lobbyHandler")
     }
@@ -74,6 +77,8 @@ export class LobbyhandlerSystem{
         console.log("lobby", lobbyEvent);
         if(lobbyEvent.op === "insert"){
             lobby.upsertLobby(lobbyEvent.data);
+            lobbyEvent.data.creator = username;
+            lobbyEvent.data.joinedGame = [username];
             this._server.to(LOBBY_ROOM).emit(LOBBY_EVENT, {op:"insert", data: lobbyEvent.data})
         }else if(lobbyEvent.op === "remove"){
             const existed = lobby.closeLobby(lobbyEvent.data.creator);
@@ -83,12 +88,15 @@ export class LobbyhandlerSystem{
         }else if(lobbyEvent.op === "all") {
             const resp = {op:"all", data: lobby.getLobbies()};
             // console.log(lobby)
-            this.userHandler.emitToUser(username,LOBBY_ROOM, resp);
+            this.userHandler.emitToUser(username, LOBBY_ROOM, resp);
         }else if(lobbyEvent.op === "startgame") {
             const existingLobby = this.lobby.getLobbies().find(l => username === l.creator);
             if(existingLobby) {
-                
+                const gameId = this.gameHandler.newGame(existingLobby.joinedGame[0], existingLobby.joinedGame[1]);
+                this.userHandler.emitToUser(existingLobby.joinedGame[0], LOBBY_EVENT, {op: "startGame", data: gameId })
+                this.userHandler.emitToUser(existingLobby.joinedGame[1], LOBBY_EVENT, {op: "startGame", data: gameId })
             }
+
             
         }else if(lobbyEvent.op === "requestjoingame") {
             const game = lobbyEvent.data.game;
@@ -98,6 +106,10 @@ export class LobbyhandlerSystem{
                 if(!existingLobby.joinedGame.includes(username)) {
                     existingLobby.joinedGame.push(username);
                 }
+                this.userHandler.emitToUser(existingLobby.creator, LOBBY_ROOM, {
+                    op: "insert",
+                    data: existingLobby
+                })
             }
         }
     }

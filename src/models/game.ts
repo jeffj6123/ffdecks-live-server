@@ -61,30 +61,34 @@ export class GamesHandler{
             // player2.socket.join(id);
             this.usersMap[player2] = gameState;
 
-            this.userHandler.emitToUser(player2, GAME_EVENT,{
-                op: "initialBoardState",
-                data: {
-                    ...gameState,
-                    activePlayer: player2
-                }
-            })
+            // this.userHandler.emitToUser(player2, GAME_EVENT,{
+            //     op: "initialBoardState",
+            //     data: {
+            //         ...gameState,
+            //         activePlayer: player2
+            //     }
+            // })
         }
 
-        this.userHandler.emitToUser(player, GAME_EVENT,{
-            op: "initialBoardState",
-            data: {
-                ...gameState,
-                activePlayer: player
-            }
-        })
+        // this.userHandler.emitToUser(player, GAME_EVENT,{
+        //     op: "initialBoardState",
+        //     data: {
+        //         ...gameState,
+        //         activePlayer: player
+        //     }
+        // })
 
         this.games.push(gameState);
         console.log("game created")
+        return gameState.gameId
     }
 
     applyPlayerAction(username: string, event: IGameEvent){
-        console.log(event);
+        console.log(username, event);
         const game = this.usersMap[username];
+        if(!game) {
+            return
+        }
         // const player = game.getPlayer(userSocket.username);
         /*
         log message is meant to be human readable to distinctly display what action the user took
@@ -92,7 +96,7 @@ export class GamesHandler{
         group message is optionally used to send publicly visible state to all users within the match
         */
         const f = this._actions.resolveBinding(event.op);
-
+        
         if(f){
             const {userDistinctMessageData, groupMessageData, logMessage } = f(game, event.data, username) ;
 
@@ -100,10 +104,10 @@ export class GamesHandler{
                 this.userHandler.emitToUser(username, GAME_EVENT, userDistinctMessageData)
             }
             if(groupMessageData){
-                this.userHandler.emitToUser(username, GAME_EVENT, userDistinctMessageData)
+                // this.userHandler.emitToUser(username, GAME_EVENT, userDistinctMessageData)
 
                 game.players.forEach(player => {
-                    this.userHandler.emitToUser(player, GAME_EVENT, userDistinctMessageData)
+                    this.userHandler.emitToUser(player, GAME_EVENT, groupMessageData)
                 })
             }
     
