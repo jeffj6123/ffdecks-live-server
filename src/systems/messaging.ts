@@ -1,5 +1,4 @@
 import * as socketio from "socket.io";
-import { IUserSocket } from "../models/user";
 
 export const MESSAGE_EVENT = "message";
 export const DEFAULT_LOBBY = "general"

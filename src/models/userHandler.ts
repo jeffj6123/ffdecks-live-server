@@ -1,27 +1,35 @@
-import { User } from "./user";
-import * as socketio from "socket.io";
+import { Socket, Server } from "socket.io";
+import { UserSocket } from "./user";
 
 export class UserHandler{
-    users: User[] = [];
-    constructor(){
+    users: Record<string, UserSocket> = {};
+    constructor(private server: Server){}
 
-    }
-
-    addSocket(socket: socketio.Socket): Promise<User> {
+    addSocket(socket: Socket): Promise<UserSocket> {
         return new Promise((resolve, reject) => {
             socket.on('setname', (message: string ) => {
-                const user = this.users.find(user => user.username === message);
-                if(user){
+                if(this.users[message]){
                   reject(true);
                 }else{
-                  let u = new User(socket, message);
-                  this.users.push(u);
+                  let u = new UserSocket(message, socket);
+                  this.users[message] = u;
                 resolve(u);
                 }
 
                 //TODO figure out when they arent authorized
               })
         })
+    }
 
+    addSocketTemp(socket: Socket, username: string) {
+      socket.join(username);
+    }
+
+    getUser(username: string) {
+      return this.users[username];
+    }
+
+    emitToUser(username: string, eventName: string, data: any) {
+      this.server.to(username).emit(eventName, eventName,)
     }
 }

@@ -2,11 +2,13 @@ import * as express from "express";
 import { Server as socketio, Socket } from "socket.io";
 import * as Http from "http";
 import { CardHandler } from "./models/cardHandler";
-import { IUserSocket, UserSocket } from "./models/user";
+import { UserSocket } from "./models/user";
 import { GamesHandler } from "./models/game";
 import * as cors from 'cors';
 
 import { GameBindingsHandler, moveCard, rotateCard } from "./models/gameBindings";
+import { Lobbyhandler, LobbyhandlerSystem } from "./models/lobbyHandler";
+import { UserHandler } from "./models/userHandler";
 
 const bindingResolver = new GameBindingsHandler();
 bindingResolver.addGameBinding("rotateCard", rotateCard)
@@ -29,10 +31,10 @@ const options: cors.CorsOptions = {
 export class Server {
   gameHandler: GamesHandler;
   cardHandler: CardHandler;
+  lobbyHandler: LobbyhandlerSystem;
+  userHandler: UserHandler;
   app: Express.Application;
   io: socketio;
-  // messaging: MessagingHandler;
-  users: IUserSocket[] = [];
   
   constructor(){
     this.cardHandler = new CardHandler();
@@ -55,25 +57,23 @@ export class Server {
             origin: '*',
           }
         });
-  
-        // this.messaging = new MessagingHandler(io);
-        this.gameHandler = new GamesHandler(io, bindingResolver);
+        
+        this.userHandler = new UserHandler(io);
+        this.gameHandler = new GamesHandler(io, bindingResolver, this.userHandler);
+        this.lobbyHandler = new LobbyhandlerSystem(io, this.userHandler);
 
         //TODO move this?
         io.on('connection', (socket: Socket) => {
 
           const user = new UserSocket(Math.random().toString(), socket);
 
-          // this.messaging.addSocket(user);
           this.gameHandler.addSocket(user);
-
-          this.users.push(user);
-          // this.gameHandler.newGame(user, null);
-          console.log(this.users.length)
+          this.lobbyHandler.addSocket(user);
+          
           // TODO remove. this is temp.
-          if(this.users.length % 2 === 0){
-            this.gameHandler.newGame(this.users[this.users.length - 1], this.users[this.users.length - 2]);
-          }          
+          // if(this.users.length % 2 === 0){
+          //   this.gameHandler.newGame(this.users[this.users.length - 1], this.users[this.users.length - 2]);
+          // }          
         });
   
         return http;

@@ -1,33 +1,9 @@
-import * as socketIo from 'socket.io';
+import { Server as socketio, Socket } from "socket.io";
 
-export interface IUser {
+export class UserSocket {
     username: string;
-    sendMessage: (event: string, message: any) => void;
-    context: Record<string, any>;
-}
-
-export class User implements IUser {
-    private listeners: Record<string, (...args: any[]) => void > = {};
-    context: Record<string, any> = {};
-
-    constructor(
-        public socket: socketIo.Socket, 
-        public username: string){}
-
-    sendMessage(event: string, message: any){
-        this.socket.emit(event, message);
-    }
-}
-
-export interface IUserSocket {
-    socket: SocketIO.Socket;
-    username: string;
-}
-
-export class UserSocket implements IUserSocket {
-    username: string;
-    _socket: SocketIO.Socket;
-    constructor(username: string, socket: any){
+    _socket: Socket;
+    constructor(username: string, socket: Socket){
         this.username = username;
         this._socket = socket;
     }
@@ -36,5 +12,7 @@ export class UserSocket implements IUserSocket {
         return this._socket;
     }
 
-    
+    public listen(eventName: string, func: (data:any) => void) {
+        this.socket.on(eventName, (data) => func(data));
+    }
 }
