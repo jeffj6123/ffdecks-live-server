@@ -8,6 +8,7 @@ import { data } from "./dummyData";
 import { IBaseEvent } from "./event.interface";
 import { UserSocket } from "./user";
 import { UserHandler } from "./userHandler";
+import { TedisPool } from "tedis";
 
 export interface ILoggingService{
     logAction: (data: any) => Promise<any>;
@@ -15,6 +16,7 @@ export interface ILoggingService{
 
 export interface IGameEvent extends IBaseEvent {
     username: string;
+    gameId: string;
 }
 
 export const GAME_EVENT = "message"
@@ -28,7 +30,8 @@ export class GamesHandler{
 
     constructor(server: Server, 
                 actions: GameBindingsHandler,
-                private userHandler: UserHandler){
+                private userHandler: UserHandler,
+                tedisPool: TedisPool){
         this._server = server;
         this._actions = actions;
     }
@@ -75,6 +78,8 @@ export class GamesHandler{
         group message is optionally used to send publicly visible state to all users within the match
         */
         const f = this._actions.resolveBinding(event.op);
+
+        const gameId = event.gameId;
         
         if(f){
             const {userDistinctMessageData, groupMessageData, logMessage } = f(game, event.data, username) ;
