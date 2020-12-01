@@ -25,6 +25,7 @@
     "rxjs": "^6.6.3",
     "socket.io": "^3.0.3",
     "socket.io-client": "^3.0.3",
+    "tedis": "^0.1.12",
     "uuid": "^3.4.0"
   },
   "devDependencies": {

@@ -2,18 +2,25 @@ import * as express from "express";
 import { Server as socketio, Socket } from "socket.io";
 import * as Http from "http";
 import { CardHandler } from "./models/cardHandler";
-import { UserSocket } from "./models/user";
 import { GamesHandler } from "./models/game";
 import * as cors from 'cors';
+import { Tedis, TedisPool } from "tedis";
 
 import { GameBindingsHandler, getState, moveCard, rotateCard } from "./models/gameBindings";
-import { Lobbyhandler, LobbyhandlerSystem } from "./models/lobbyHandler";
+import { LobbyhandlerSystem } from "./models/lobbyHandler";
 import { UserHandler } from "./models/userHandler";
 
 const bindingResolver = new GameBindingsHandler();
 bindingResolver.addGameBinding("state", getState)
 bindingResolver.addGameBinding("rotateCard", rotateCard)
 bindingResolver.addGameBinding("moveCard", moveCard)
+
+// auth
+const tedis = new Tedis({
+  port: 16667,
+  host: "redis-16667.c1.us-central1-2.gce.cloud.redislabs.com",
+  password: "pvkbLtJHlxs35pnUkKY6PyiMtcfa2vHa"
+});
 
 const options: cors.CorsOptions = {
   allowedHeaders: [
