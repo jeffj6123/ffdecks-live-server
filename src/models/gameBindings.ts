@@ -28,11 +28,8 @@ export function moveCard(game: IBoardState, data: IMoveCardEventData, username: 
     const card = game.cards[cardId];
 
     if(card.owner === username) {
-        console.log(game.containers[data.previousContainer].length, game.containers[data.nextContainer].length)
-
         game.containers[data.previousContainer].splice(data.previousIndex, 1);
         game.containers[data.nextContainer].splice(data.currentIndex, 0, cardId);
-        console.log(game.containers[data.previousContainer].length, game.containers[data.nextContainer].length)
     }
 
     r.groupMessageData = {op:"moveCard", data};

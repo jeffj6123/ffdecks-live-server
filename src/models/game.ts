@@ -46,9 +46,7 @@ export class GamesHandler{
         addGridContainers(player, gameState, 'forward', 8, 1);
         addGridContainers(player, gameState, 'backup', 5, 1);
 
-        // player.socket.join(id);
         this.usersMap[player] = gameState;
-
 
         const player2Username = player2 || "test";
         addPlayerContainers(player2Username, gameState);
@@ -58,33 +56,14 @@ export class GamesHandler{
 
 
         if(player2) {
-            // player2.socket.join(id);
             this.usersMap[player2] = gameState;
-
-            // this.userHandler.emitToUser(player2, GAME_EVENT,{
-            //     op: "initialBoardState",
-            //     data: {
-            //         ...gameState,
-            //         activePlayer: player2
-            //     }
-            // })
         }
-
-        // this.userHandler.emitToUser(player, GAME_EVENT,{
-        //     op: "initialBoardState",
-        //     data: {
-        //         ...gameState,
-        //         activePlayer: player
-        //     }
-        // })
-
         this.games.push(gameState);
-        console.log("game created")
         return gameState.gameId
     }
 
     applyPlayerAction(username: string, event: IGameEvent){
-        console.log(username, event);
+        console.log(username, event.op);
         const game = this.usersMap[username];
         if(!game) {
             return

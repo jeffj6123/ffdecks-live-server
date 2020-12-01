@@ -17,8 +17,6 @@ export class UserHandler{
                 // }
                 socket.emit("ready");
                 resolve(u);
-
-                //TODO figure out when they arent authorized
               })
             socket.emit('setname');
         })
@@ -34,7 +32,6 @@ export class UserHandler{
     }
 
     emitToUser(username: string, eventName: string, data: any) {
-      console.log(username, eventName, data)
       this.server.to(username).emit(eventName, data)
     }
 }
