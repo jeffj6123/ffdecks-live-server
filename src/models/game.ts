@@ -46,16 +46,16 @@ export class GamesHandler{
         
         addPlayerContainers(player, gameState);
         insertDeckAndSetHand(gameState, data.cards, player);
-        addGridContainers(player, gameState, 'forward', 8, 1);
-        addGridContainers(player, gameState, 'backup', 5, 1);
+        addGridContainers(player, gameState, 'forward', 1, 1);
+        addGridContainers(player, gameState, 'backup', 1, 1);
 
         this.usersMap[player] = gameState;
 
         const player2Username = player2 || "test";
         addPlayerContainers(player2Username, gameState);
         insertDeckAndSetHand(gameState, data.cards.reverse(), player2Username);
-        addGridContainers(player2Username, gameState, 'forward', 8, 1);
-        addGridContainers(player2Username, gameState, 'backup', 5, 1);
+        addGridContainers(player2Username, gameState, 'forward', 1, 1);
+        addGridContainers(player2Username, gameState, 'backup', 1, 1);
 
 
         if(player2) {
